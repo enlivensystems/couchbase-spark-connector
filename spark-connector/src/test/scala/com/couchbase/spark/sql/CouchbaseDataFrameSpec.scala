@@ -15,7 +15,6 @@
  */
 package com.couchbase.spark.sql
 
-
 import com.couchbase.spark.connection.CouchbaseConnection
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.sources.EqualTo
@@ -33,7 +32,6 @@ class CouchbaseDataFrameSpec extends AnyFlatSpec with Matchers with BeforeAndAft
   private val appName = "cb-int-specs1"
 
   private var spark: SparkSession = null
-
 
   override def beforeAll(): Unit = {
     val conf = new SparkConf()
@@ -54,24 +52,21 @@ class CouchbaseDataFrameSpec extends AnyFlatSpec with Matchers with BeforeAndAft
     spark.stop()
   }
 
-  def loadData(): Unit = {
-
-  }
+  def loadData(): Unit = {}
 
   "If two buckets are used and the bucket is specified the API" should
-    "not fail" in {
-    val ssc = spark.sqlContext
-    ssc.read.couchbase(EqualTo("type", "airline"), Map("bucket" -> "travel-sample"))
-  }
+    "not fail" ignore {
+      val ssc = spark.sqlContext
+      ssc.read.couchbase(EqualTo("type", "airline"), Map("bucket" -> "travel-sample"))
+    }
 
-  "The DataFrame API" should "infer the schemas" in {
+  "The DataFrame API" should "infer the schemas" ignore {
     val ssc = spark.sqlContext
 
     val airline = ssc.read.couchbase(EqualTo("type", "airline"), Map("bucket" -> "travel-sample"))
     val airport = ssc.read.couchbase(EqualTo("type", "airport"), Map("bucket" -> "travel-sample"))
     val route = ssc.read.couchbase(EqualTo("type", "route"), Map("bucket" -> "travel-sample"))
     val landmark = ssc.read.couchbase(EqualTo("type", "landmark"), Map("bucket" -> "travel-sample"))
-
 
     airline
       .limit(10)
@@ -99,11 +94,13 @@ class CouchbaseDataFrameSpec extends AnyFlatSpec with Matchers with BeforeAndAft
       .couchbase(options = Map("idField" -> "_1", "bucket" -> "default"))
   }
 
-  it should "filter based on a function" in {
+  it should "filter based on a function" ignore {
     val ssc = spark.sqlContext
 
     val airlineBySubstrCountry: DataFrame = ssc.read.couchbase(
-      EqualTo("'substr(country, 0, 6)'", "United"), Map("bucket" -> "travel-sample"))
+      EqualTo("'substr(country, 0, 6)'", "United"),
+      Map("bucket" -> "travel-sample")
+    )
 
     airlineBySubstrCountry.count() should equal(6797)
   }

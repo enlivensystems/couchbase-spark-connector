@@ -227,7 +227,7 @@ class CouchbaseSource(
       val rows = results.map(
         t => Row(new String(t._1, CharsetUtil.UTF_8), t._2)
       )
-      val rdd = sqlContext.sparkContext.parallelize(rows)
+      val rdd = sqlContext.sparkContext.parallelize(rows.toSeq)
       sqlContext.createDataFrame(rdd, usedSchema)
     } else {
 
@@ -241,7 +241,7 @@ class CouchbaseSource(
           } else {
             new String(t._2, CharsetUtil.UTF_8)
           }
-      })
+      }.toSeq)
 
       val dataset: Dataset[String] = sqlContext.sparkSession.createDataset(rdd)(Encoders.STRING)
       sqlContext.read.schema(usedSchema).json(dataset)

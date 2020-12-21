@@ -7,14 +7,14 @@ You can link against this library (for Spark 3.0) in your program at the followi
 
 ```
 groupId: com.couchbase.client
-artifactId: spark-connector_2.12
-version: 3.0.12
+artifactId: spark-connector_2.13
+version: 3.1.0
 ```
 
 If you are using SBT:
 
 ```
-libraryDependencies += "com.couchbase.client" %% "spark-connector" % "3.0.12"
+libraryDependencies += "com.couchbase.client" %% "spark-connector" % "3.1.0"
 ```
 
 ## Documentation

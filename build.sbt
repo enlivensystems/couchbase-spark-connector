@@ -8,8 +8,8 @@ makePomConfiguration := makePomConfiguration.value.withConfigurations(
 )
 conflictManager := ConflictManager.default
 
-lazy val sparkVersion = "3.0.1"
-lazy val scalaLanguageVersion = "2.12.12"
+lazy val sparkVersion = "3.2.0-SNAPSHOT"
+lazy val scalaLanguageVersion = "2.13.4"
 
 Project.inConfig(Test)(baseAssemblySettings)
 
@@ -23,6 +23,7 @@ lazy val commonSettings = Seq(
     }
     v
   },
+  crossScalaVersions := List("2.12.12", "2.13.4"),
   scalaVersion := scalaLanguageVersion,
   logLevel in test := Level.Debug,
   logLevel in assembly := Level.Debug,
@@ -35,7 +36,8 @@ lazy val commonSettings = Seq(
     "Artifactory Realm".at(s"https://artifactory.enliven.systems/artifactory/sbt-dev-local/")
   ),
   resolvers ++= Seq(
-    "Maven Central".at("https://repo1.maven.org/maven2/")
+    "Maven Central".at("https://repo1.maven.org/maven2/"),
+    "Enliven Systems Central".at(s"https://central.enliven.systems/artifactory/sbt-release/")
   ),
   assemblyShadeRules in assembly := Seq(
     ShadeRule

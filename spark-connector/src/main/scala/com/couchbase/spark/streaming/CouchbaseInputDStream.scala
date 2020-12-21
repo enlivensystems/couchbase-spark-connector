@@ -56,8 +56,8 @@ class CouchbaseInputDStream(
   bucketName: Option[String],
   scopeName: Option[String],
   collectionName: Option[String],
-  from: StreamFrom = FromNow,
-  to: StreamTo = ToInfinity)
+  from: StreamFrom = StreamFrom.NOW,
+  to: StreamTo = StreamTo.INFINITY)
  extends ReceiverInputDStream[StreamMessage](_ssc) {
 
   override def getReceiver(): Receiver[StreamMessage] = {

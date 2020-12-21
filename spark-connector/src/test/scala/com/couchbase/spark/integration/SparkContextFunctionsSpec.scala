@@ -15,36 +15,30 @@
  */
 package com.couchbase.spark.integration
 
+import java.util
+
 import com.couchbase.client.java.Bucket
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
-import com.couchbase.client.java.query.consistency.ScanConsistency
 import com.couchbase.client.java.query._
+import com.couchbase.client.java.query.consistency.ScanConsistency
 import com.couchbase.client.java.view.{DefaultView, DesignDocument, Stale, ViewQuery}
+import com.couchbase.spark._
 import com.couchbase.spark.connection.{CouchbaseConfig, CouchbaseConnection}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
-
-import scala.collection.JavaConversions._
-import com.couchbase.spark._
 import org.junit.runner.RunWith
 import org.scalatest._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
-import org.scalatest._
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers
-import org.scalatestplus.junit.JUnitRunner
-
-import scala.Console.in
 
 /**
- * Integration test to verify Spark Context functionality in combination with Couchbase Server
- *
- * @author Michael Nitschinger
- * @since 1.0.0
- */
+  * Integration test to verify Spark Context functionality in combination with Couchbase Server
+  *
+  * @author Michael Nitschinger
+  * @since 1.0.0
+  */
 @RunWith(classOf[JUnitRunner])
 class SparkContextFunctionsSpec extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
@@ -63,15 +57,19 @@ class SparkContextFunctionsSpec extends AnyFlatSpec with Matchers with BeforeAnd
       .set("spark.couchbase.username", "Administrator")
       .set("spark.couchbase.password", "password")
       .set("com.couchbase.bucket." + bucketName, "")
-     val spark = SparkSession.builder()
-       .config(conf)
-       .getOrCreate()
+    val spark = SparkSession.builder()
+      .config(conf)
+      .getOrCreate()
     sparkContext = spark.sparkContext
     bucket = CouchbaseConnection().bucket(CouchbaseConfig(conf), bucketName)
     bucket.bucketManager().flush()
 
-    val ddoc = DesignDocument.create("spark_design", List(DefaultView.create("view",
-      "function (doc, meta) { if (doc.type == \"user\") { emit(doc.username, null); } }"))
+    val ddoc = DesignDocument.create(
+      "spark_design",
+      new util.ArrayList(util.Arrays.asList(DefaultView.create(
+        "view",
+        "function (doc, meta) { if (doc.type == \"user\") { emit(doc.username, null); } }"
+      )))
     )
     bucket.bucketManager().upsertDesignDocument(ddoc)
 
@@ -94,20 +92,26 @@ class SparkContextFunctionsSpec extends AnyFlatSpec with Matchers with BeforeAnd
       .collect()
 
     result should have size 3
-    result.foreach { doc =>
-      doc.content().getString("val") should equal (doc.id())
+    result.foreach {
+      doc => doc.content().getString("val") should equal(doc.id())
     }
   }
 
   it should "be created from a View" in {
 
     bucket.upsert(
-      JsonDocument.create("user-1", JsonObject.create()
-        .put("type", "user").put("username", "Michael"))
+      JsonDocument.create(
+        "user-1",
+        JsonObject.create()
+          .put("type", "user").put("username", "Michael")
+      )
     )
     bucket.upsert(
-      JsonDocument.create("user-2", JsonObject.create()
-        .put("type", "user").put("username", "Simon"))
+      JsonDocument.create(
+        "user-2",
+        JsonObject.create()
+          .put("type", "user").put("username", "Simon")
+      )
     )
 
     val result = sparkContext
@@ -115,19 +119,23 @@ class SparkContextFunctionsSpec extends AnyFlatSpec with Matchers with BeforeAnd
       .collect()
 
     result should have size 2
-    result.foreach { doc =>
-      if (doc.id == "user-1") {
-        doc.key should equal ("Michael")
-      } else if (doc.id == "user-2") {
-        doc.key should equal ("Simon")
-      }
+    result.foreach {
+      doc =>
+        if (doc.id == "user-1") {
+          doc.key should equal("Michael")
+        } else if (doc.id == "user-2") {
+          doc.key should equal("Simon")
+        }
     }
   }
 
   it should "be created from a N1QL Query" in {
     bucket.upsert(
-      JsonDocument.create("car-1", JsonObject.create()
-        .put("type", "car").put("name", "Ford Mustang"))
+      JsonDocument.create(
+        "car-1",
+        JsonObject.create()
+          .put("type", "car").put("name", "Ford Mustang")
+      )
     )
 
     bucket.upsert(
@@ -138,20 +146,22 @@ class SparkContextFunctionsSpec extends AnyFlatSpec with Matchers with BeforeAnd
       .couchbaseQuery(
         N1qlQuery.simple(
           s"""SELECT META(`$bucketName`).id,
-              | `$bucketName`.*
-              | FROM `$bucketName`
-              |  WHERE type = 'car'""".stripMargin,
-          N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS))
+             | `$bucketName`.*
+             | FROM `$bucketName`
+             |  WHERE type = 'car'""".stripMargin,
+          N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)
+        )
       )
       .collect()
 
     result should have size 2
-    result.foreach { doc =>
-      if (doc.value.getString("id") == "car-1") {
-        doc.value.getString("name") should equal ("Ford Mustang")
-      } else if (doc.value.getString("id") == "car-1") {
-        doc.value.getString("name") should equal ("VW Passat")
-      }
+    result.foreach {
+      doc =>
+        if (doc.value.getString("id") == "car-1") {
+          doc.value.getString("name") should equal("Ford Mustang")
+        } else if (doc.value.getString("id") == "car-1") {
+          doc.value.getString("name") should equal("VW Passat")
+        }
     }
 
   }

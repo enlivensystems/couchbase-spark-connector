@@ -15,11 +15,11 @@
  */
 package com.couchbase.spark.samples
 
+import com.couchbase.client.dcp.{StreamFrom, StreamTo}
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import com.couchbase.spark.streaming._
 import org.apache.spark.storage.StorageLevel
-
 
 /**
   * Class to manually run and test the spark streaming. This is not intended as a integration test.
@@ -36,7 +36,11 @@ object StreamingSample {
     val ssc = new StreamingContext(conf, Seconds(5))
 
     ssc
-      .couchbaseStream(from = FromBeginning, to = ToNow, storageLevel = StorageLevel.MEMORY_ONLY)
+      .couchbaseStream(
+        from = StreamFrom.BEGINNING,
+        to = StreamTo.NOW,
+        storageLevel = StorageLevel.MEMORY_ONLY
+      )
       .map(_.getClass)
       .countByValue()
       .print()

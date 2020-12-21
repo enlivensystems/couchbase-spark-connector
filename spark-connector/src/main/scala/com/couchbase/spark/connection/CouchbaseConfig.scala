@@ -21,12 +21,24 @@ case class CouchbaseBucket(name: String, password: String)
 case class Credential(username: String, password: String)
 case class RetryOptions(maxTries: Int, maxDelay: Int, minDelay: Int)
 case class SslOptions(enabled: Boolean, keystorePath: String, keystorePassword: String)
-case class Timeouts(query: Option[Long], view: Option[Long], search: Option[Long],
-                    analytics: Option[Long], kv: Option[Long], connect: Option[Long],
-                    disconnect: Option[Long], management: Option[Long])
-case class CouchbaseConfig(hosts: Seq[String], buckets: Seq[CouchbaseBucket],
-                           retryOpts: RetryOptions, sslOptions: Option[SslOptions],
-                           credential: Option[Credential], timeouts: Timeouts)
+
+case class Timeouts(
+  query: Option[Long],
+  view: Option[Long],
+  search: Option[Long],
+  analytics: Option[Long],
+  kv: Option[Long],
+  connect: Option[Long],
+  disconnect: Option[Long],
+  management: Option[Long])
+
+case class CouchbaseConfig(
+  hosts: Seq[String],
+  buckets: Seq[CouchbaseBucket],
+  retryOpts: RetryOptions,
+  sslOptions: Option[SslOptions],
+  credential: Option[Credential],
+  timeouts: Timeouts)
 
 object CouchbaseConfig {
 
@@ -92,19 +104,26 @@ object CouchbaseConfig {
       .getOption(PASSWORD)
       .orElse(cfg.getOption(COMPAT_PASSWORD))
 
-    val credential = if (username.isDefined) {
-      Some(Credential(username.get, password.get))
-    } else {
-      None
-    }
+    val credential =
+      if (username.isDefined) {
+        Some(Credential(username.get, password.get))
+      } else {
+        None
+      }
 
     val bucketConfigs = cfg
-      .getAll.to[List]
-      .filter(pair => pair._1.startsWith(BUCKET_PREFIX) || pair._1.startsWith(COMPAT_BUCKET_PREFIX))
-      .map(pair => CouchbaseBucket(
-        pair._1.replace(BUCKET_PREFIX, "").replace(COMPAT_BUCKET_PREFIX, ""),
-        pair._2
-    ))
+      .getAll
+      .toList
+      .filter(
+        pair => pair._1.startsWith(BUCKET_PREFIX) || pair._1.startsWith(COMPAT_BUCKET_PREFIX)
+      )
+      .map(
+        pair =>
+          CouchbaseBucket(
+            pair._1.replace(BUCKET_PREFIX, "").replace(COMPAT_BUCKET_PREFIX, ""),
+            pair._2
+          )
+      )
 
     var nodes = cfg.get(NODES_PREFIX, "").split(";")
       .union(cfg.get(COMPAT_NODES_PREFIX, "").split(";"))
@@ -135,7 +154,6 @@ object CouchbaseConfig {
 
     val retryOptions = RetryOptions(maxRetries, maxRetryDelay, minRetryDelay)
 
-
     var useSsl = false
     var keyStorePath = ""
     var keyStorePassword = ""
@@ -163,23 +181,37 @@ object CouchbaseConfig {
       }
     }
 
-    val sslOptions = if (useSsl) {
-      Some(SslOptions(enabled = true, keyStorePath, keyStorePassword))
-    } else {
-      None
-    }
+    val sslOptions =
+      if (useSsl) {
+        Some(SslOptions(enabled = true, keyStorePath, keyStorePassword))
+      } else {
+        None
+      }
 
     val timeouts = parseTimeouts(cfg)
 
     if (bucketConfigs.isEmpty) {
-      new CouchbaseConfig(nodes, Seq(CouchbaseBucket(DEFAULT_BUCKET, DEFAULT_PASSWORD)),
-        retryOptions, sslOptions, credential, timeouts)
+      new CouchbaseConfig(
+        nodes.toSeq,
+        Seq(CouchbaseBucket(DEFAULT_BUCKET, DEFAULT_PASSWORD)),
+        retryOptions,
+        sslOptions,
+        credential,
+        timeouts
+      )
     } else {
-      new CouchbaseConfig(nodes, bucketConfigs, retryOptions, sslOptions, credential, timeouts)
+      new CouchbaseConfig(
+        nodes.toSeq,
+        bucketConfigs,
+        retryOptions,
+        sslOptions,
+        credential,
+        timeouts
+      )
     }
   }
 
-  def parseTimeouts(cfg: SparkConf): Timeouts = {
+  def parseTimeouts(cfg: SparkConf): Timeouts =
     Timeouts(
       parseTimeout(cfg, QUERY_TIMEOUT, COMPAT_QUERY_TIMEOUT),
       parseTimeout(cfg, VIEW_TIMEOUT, COMPAT_VIEW_TIMEOUT),
@@ -190,18 +222,22 @@ object CouchbaseConfig {
       parseTimeout(cfg, DISCONNECT_TIMEOUT, COMPAT_DISCONNECT_TIMEOUT),
       parseTimeout(cfg, MANAGEMENT_TIMEOUT, COMPAT_MANAGEMENT_TIMEOUT)
     )
-  }
 
-  def parseTimeout(cfg: SparkConf, input: String, compat: String): Option[Long] = {
+  def parseTimeout(cfg: SparkConf, input: String, compat: String): Option[Long] =
     cfg.getOption(input).orElse(cfg.getOption(compat)).map(_.toLong)
-  }
 
-  def apply(creds: Credential) = new CouchbaseConfig(
-    Seq(DEFAULT_NODE),
-    Seq(CouchbaseBucket(DEFAULT_BUCKET, DEFAULT_PASSWORD)),
-    RetryOptions(DEFAULT_MAX_RETRIES.toInt, DEFAULT_MAX_RETRY_DELAY.toInt,
-      DEFAULT_MIN_RETRY_DELAY.toInt), None, Some(creds),
-    Timeouts(None, None, None, None, None, None, None, None)
-  )
+  def apply(creds: Credential) =
+    new CouchbaseConfig(
+      Seq(DEFAULT_NODE),
+      Seq(CouchbaseBucket(DEFAULT_BUCKET, DEFAULT_PASSWORD)),
+      RetryOptions(
+        DEFAULT_MAX_RETRIES.toInt,
+        DEFAULT_MAX_RETRY_DELAY.toInt,
+        DEFAULT_MIN_RETRY_DELAY.toInt
+      ),
+      None,
+      Some(creds),
+      Timeouts(None, None, None, None, None, None, None, None)
+    )
 
 }

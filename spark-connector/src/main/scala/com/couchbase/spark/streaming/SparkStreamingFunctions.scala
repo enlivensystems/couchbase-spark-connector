@@ -15,6 +15,7 @@
  */
 package com.couchbase.spark.streaming
 
+import com.couchbase.client.dcp.{StreamFrom, StreamTo}
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.ReceiverInputDStream
@@ -26,8 +27,8 @@ class SparkStreamingFunctions(@transient val ssc: StreamingContext) extends Seri
     scopeName: Option[String] = None,
     collectionName: Option[String] = None,
     storageLevel: StorageLevel = StorageLevel.MEMORY_AND_DISK_SER_2,
-    from: StreamFrom = FromNow,
-    to: StreamTo = ToInfinity
+    from: StreamFrom = StreamFrom.NOW,
+    to: StreamTo = StreamTo.INFINITY
   ): ReceiverInputDStream[StreamMessage] =
     new CouchbaseInputDStream(ssc, storageLevel, bucketName, scopeName, collectionName, from, to)
 

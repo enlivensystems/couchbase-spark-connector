@@ -43,17 +43,17 @@ class CouchbaseConfigSpec extends AnyFlatSpec with Matchers {
 
     cbConf.buckets.size should equal(2)
 
-    cbConf.buckets.head.name should equal("a")
-    cbConf.buckets.head.password should equal("b")
-    cbConf.buckets(1).name should equal("c")
-    cbConf.buckets(1).password should equal("d")
+    cbConf.buckets.exists(_.name == "a") should be(true)
+    cbConf.buckets.exists(_.password == "b") should be(true)
+    cbConf.buckets.exists(_.name == "c") should be(true)
+    cbConf.buckets.exists(_.password == "d") should be(true)
   }
 
   it should "apply default settings" in {
     val sparkConf = new SparkConf()
 
     val cbConf = CouchbaseConfig.apply(sparkConf)
-    cbConf.hosts should equal (Array("127.0.0.1"))
+    cbConf.hosts should equal(Array("127.0.0.1"))
     cbConf.buckets.size should equal(1)
     cbConf.buckets.head.name should equal("default")
     cbConf.buckets.head.password should equal("")
